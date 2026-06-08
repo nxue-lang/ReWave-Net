@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Local environments
+.env
+.venv/
+venv/
+
+# MRI data and generated experiment artifacts
+data/
+outputs/
+*.h5
+*.tar
+*.npz
+*.pt
+*.pth
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

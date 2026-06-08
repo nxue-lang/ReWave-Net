@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mri-reconstruction-pipeline"
+version = "0.1.0"
+description = "A reproducible MRI reconstruction pipeline with data consistency and modern deep learning baselines."
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "h5py",
+    "matplotlib",
+    "pyyaml",
+    "scikit-image",
+    "torch",
+    "torchvision",
+    "tqdm",
+]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*.py" = ["E402"]
