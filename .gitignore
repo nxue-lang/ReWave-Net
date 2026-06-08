@@ -13,8 +13,8 @@ __pycache__/
 venv/
 
 # MRI data and generated experiment artifacts
-data/
-outputs/
+/data/
+/outputs/
 *.h5
 *.tar
 *.npz
