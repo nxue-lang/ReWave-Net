@@ -8,9 +8,9 @@ matched ReWave-Net experiment reported in the repository README.
 | Setting | Value |
 | --- | --- |
 | Dataset | fastMRI single-coil knee |
-| Train/test volumes | 159 / 40 |
+| Train/held-out volumes | 159 / 40 |
 | Train split hash | `c3f49347692ef2806afb3db6` |
-| Test split hash | `e281eb8779521500f31e5870` |
+| Held-out split hash | `e281eb8779521500f31e5870` |
 | Acceleration | 4 |
 | Center fraction | 0.08 |
 | Cascades | 5 |
@@ -20,8 +20,9 @@ matched ReWave-Net experiment reported in the repository README.
 | Epochs | 20 |
 | Seed / mask seed | 42 / 42 |
 
-Split hashes are BLAKE2s digests of sorted fastMRI volume filenames. Raw data
-paths and files are not published.
+Split hashes are 12-byte BLAKE2s digests of sorted fastMRI volume filenames
+joined by newline characters without a trailing newline. Raw data paths and
+files are not published.
 
 ## Matched Comparison
 
@@ -31,8 +32,10 @@ paths and files are not published.
 | Unrolled Complex U-Net | 26.4522 / 2.8305 | 0.5742 / 0.1047 | 0.039058 / 0.013241 |
 | ReWave-Net | **27.0594 / 3.1976** | **0.5918 / 0.1111** | **0.037323 / 0.013716** |
 
-All three rows use the same test split and metric conversion. ReWave-Net and
-the Complex U-Net baseline use matched training configurations.
+All three rows use the same held-out split and metric conversion. ReWave-Net
+and the Complex U-Net baseline use matched training configurations. Metrics
+are computed per slice after a `320 x 320` center crop and target-maximum
+scaling, then averaged across slices.
 
 ## Files
 
@@ -64,3 +67,7 @@ The checkpoint was selected at epoch 20 with validation complex L1 loss
 ```text
 [0.7720, 0.9104, 0.9096, 0.9380, 0.9584]
 ```
+
+The same 40 held-out volumes were used for checkpoint selection and the
+reported metrics. These results are therefore validation/evaluation results,
+not an independent test-set estimate.

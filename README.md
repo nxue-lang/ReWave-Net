@@ -58,7 +58,7 @@ standard components as new.
 
 ## Results
 
-The current matched experiment uses the same multi-file split, sampling rule,
+The current matched experiment uses the same held-out volumes, sampling rule,
 number of cascades, base channels, epochs, and metric conversion for the
 zero-filled, unrolled Complex U-Net, and ReWave-Net comparisons.
 
@@ -69,11 +69,12 @@ zero-filled, unrolled Complex U-Net, and ReWave-Net comparisons.
 | ReWave-Net | **27.0594** | **0.5918** | **0.037323** |
 
 ReWave-Net improves PSNR by `0.6072 dB` over the matched unrolled Complex
-U-Net baseline. These are research results on the current fixed split, not a
-clinical validation claim. See [the results notes](docs/results.md) for
-experiment details and remaining ablations. A curated result summary,
-configuration, and reconstruction example are available in
-[`results/`](results/README.md).
+U-Net baseline. The reported values are per-slice means on the held-out split
+that was also used for checkpoint selection, so they are validation/evaluation
+results rather than an independent test-set estimate or a clinical validation
+claim. See [the results notes](docs/results.md) for the exact metric protocol
+and remaining ablations. A curated result summary, configuration, and
+reconstruction example are available in [`results/`](results/README.md).
 
 ## Pretrained Model
 

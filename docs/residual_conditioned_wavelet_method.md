@@ -67,6 +67,11 @@ The radial bands use normalized-radius boundaries:
 
 ```math
 \begin{aligned}
+\rho(u)
+&=
+\frac{\sqrt{a(u)^2+b(u)^2}}
+{\max_v\sqrt{a(v)^2+b(v)^2}},
+\qquad a,b\in[-1,1], \\
 B_{\mathrm{low}}  &= \{u : \rho(u) < 1/3\}, \\
 B_{\mathrm{mid}}  &= \{u : 1/3 \le \rho(u) < 2/3\}, \\
 B_{\mathrm{high}} &= \{u : \rho(u) \ge 2/3\}.
@@ -109,6 +114,21 @@ orthonormal 2D Haar transform:
 (X_{LL}, X_{LH}, X_{HL}, X_{HH}) = \mathrm{DWT}(X).
 ```
 
+For each non-overlapping $2\times2$ patch
+$(X_{00},X_{01},X_{10},X_{11})$, the implementation computes:
+
+```math
+\begin{aligned}
+X_{LL} &= \tfrac{1}{2}(X_{00}+X_{01}+X_{10}+X_{11}), \\
+X_{LH} &= \tfrac{1}{2}(X_{00}-X_{01}+X_{10}-X_{11}), \\
+X_{HL} &= \tfrac{1}{2}(X_{00}+X_{01}-X_{10}-X_{11}), \\
+X_{HH} &= \tfrac{1}{2}(X_{00}-X_{01}-X_{10}+X_{11}).
+\end{aligned}
+```
+
+Feature maps with an odd height or width are replicate-padded before the Haar
+transform and cropped back to their original size after the inverse transform.
+
 $X_{LL}$ is processed by a large-kernel structure branch. $X_{LH}$, $X_{HL}$, and $X_{HH}$
 share a detail branch:
 
@@ -119,6 +139,10 @@ H_q &= f_{\mathrm{high}}(X_q),
 \qquad q \in \{LH, HL, HH\}.
 \end{aligned}
 ```
+
+Here, $f_{\mathrm{low}}$ is a depthwise $7\times7$ convolution followed by a
+$1\times1$ convolution and GELU. The shared $f_{\mathrm{high}}$ is a
+depthwise $3\times3$ convolution, GELU, and a $1\times1$ convolution.
 
 The block summarizes the processed branches:
 
@@ -176,7 +200,27 @@ The three measured residuals jointly condition the MLP. The implementation
 does not force a one-to-one mapping between a k-space residual band and a Haar
 subband, and the gate is channel-wise rather than spatially varying.
 
-## 3. Cascade-Wise Soft Data Consistency
+## 3. Residual-Conditioned Complex U-Net
+
+Each U-Net convolution block applies two $3\times3$
+convolution--InstanceNorm--GELU stages followed by the residual-conditioned
+wavelet block above. The regularizer has three encoder levels, a bottleneck,
+three decoder levels, max pooling, transposed-convolution upsampling, and
+skip connections.
+
+The same condition $c_t$ is supplied to every encoder, bottleneck, and decoder
+wavelet block in cascade $t$. The U-Net predicts a complex-valued correction
+in two real/imaginary channels and adds it to the cascade input:
+
+```math
+\widetilde{x}_t = x_{t-1} + f_{\theta}(x_{t-1};c_t).
+```
+
+By default, the regularizer parameters $\theta$ are shared across cascades,
+while $c_t$ is recomputed at every cascade. The training CLI can instead use
+one regularizer per cascade with `--unshared-denoiser`.
+
+## 4. Cascade-Wise Soft Data Consistency
 
 After the wavelet U-Net produces candidate reconstruction $\widetilde{x}_t$,
 ReWave-Net applies weighted k-space data consistency:

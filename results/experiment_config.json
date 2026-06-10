@@ -1,9 +1,11 @@
 {
   "dataset": "fastMRI single-coil knee",
   "train_volume_count": 159,
-  "test_volume_count": 40,
+  "held_out_volume_count": 40,
   "train_split_blake2s": "c3f49347692ef2806afb3db6",
-  "test_split_blake2s": "e281eb8779521500f31e5870",
+  "held_out_split_blake2s": "e281eb8779521500f31e5870",
+  "split_hash_serialization": "sorted volume filenames joined by newline without trailing newline; BLAKE2s digest_size=12",
+  "held_out_split_role": "checkpoint selection and reported validation/evaluation metrics",
   "acceleration": 4,
   "center_fraction": 0.08,
   "num_cascades": 5,
@@ -17,6 +19,9 @@
   "seed": 42,
   "mask_seed": 42,
   "middle_slice_margin": 5,
+  "metric_crop": [320, 320],
+  "metric_scale": "per-slice target magnitude maximum",
+  "metric_aggregation": "mean and standard deviation across slices",
   "best_epoch": 20,
   "best_validation_complex_l1": 0.02967023079558699,
   "learned_dc_weights": [

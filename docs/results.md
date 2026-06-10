@@ -5,12 +5,12 @@
 The current matched comparison uses:
 
 - fastMRI single-coil knee data;
-- a fixed multi-file train/test split;
+- a fixed 159/40-volume train/held-out split;
 - acceleration `4` and center fraction `0.08`;
 - five cascades and eight base channels;
 - 20 training epochs;
 - seed and mask seed `42`; and
-- target-scale PSNR, SSIM, and MAE conversion.
+- per-slice target-scale PSNR, SSIM, and MAE conversion.
 
 | Method | PSNR mean | SSIM mean | MAE mean | Delta PSNR vs zero-filled |
 | --- | ---: | ---: | ---: | ---: |
@@ -25,11 +25,32 @@ data-consistency weights from a common initialization of `0.1`:
 [0.772, 0.910, 0.910, 0.938, 0.958]
 ```
 
+## Evaluation Protocol
+
+The training script evaluates complex L1 loss on the 40 held-out volumes after
+each epoch and selects the best checkpoint using that loss. The reported
+PSNR, SSIM, and MAE values are then computed on the same held-out volumes.
+They should therefore be interpreted as validation/evaluation results, not as
+an independent test-set estimate.
+
+For each evaluated slice, the code:
+
+1. converts the two real/imaginary channels to a complex magnitude image;
+2. center-crops the prediction and target to `320 x 320`;
+3. divides both by that slice's target-magnitude maximum;
+4. computes PSNR and SSIM with `data_range=1.0`, plus MAE; and
+5. reports the arithmetic mean and standard deviation across slices.
+
+Up to the middle 11 slices of each volume are used
+(`middle_slice_margin=5`). This is the repository's matched internal
+evaluation protocol and is not the official fastMRI leaderboard protocol.
+
 ## Interpretation
 
 This result shows that the complete ReWave-Net model outperforms the matched
-unrolled Complex U-Net baseline on the current fixed split. It does not by
-itself isolate the contribution of every component.
+unrolled Complex U-Net baseline on the current fixed held-out split. It does
+not by itself isolate the contribution of every component or estimate
+performance on an independent test set.
 
 The strongest component-level claim requires matched ablations for:
 
