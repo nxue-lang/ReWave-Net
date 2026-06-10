@@ -86,8 +86,7 @@ conversion for:
 
 ```text
 Unrolled Complex U-Net
-Unrolled Frequency-Aware U-Net
-Unrolled Residual-Conditioned Wavelet U-Net
+ReWave-Net
 ```
 
 The new mechanism should only be claimed as beneficial if it improves the

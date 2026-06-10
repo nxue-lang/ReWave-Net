@@ -143,10 +143,24 @@ The complete public script inventory is documented in
 - The current five learned ReWave-Net soft-DC weights are approximately
   `[0.772, 0.910, 0.910, 0.938, 0.958]`.
 
-Before publishing a release, follow
-[the repository release checklist](docs/repository_release_checklist.md).
-
 ## Scope
 
 This repository is research code for accelerated MRI reconstruction. It is not
 intended for clinical use.
+
+## References and Acknowledgements
+
+This work uses the fastMRI single-coil knee dataset and builds on established
+ideas from U-Net architectures and model-based unrolled MRI reconstruction:
+
+1. Zbontar et al., [fastMRI: An Open Dataset and Benchmarks for Accelerated
+   MRI](https://arxiv.org/abs/1811.08839), 2018.
+2. Ronneberger et al., [U-Net: Convolutional Networks for Biomedical Image
+   Segmentation](https://arxiv.org/abs/1505.04597), 2015.
+3. Aggarwal et al., [MoDL: Model Based Deep Learning Architecture for Inverse
+   Problems](https://arxiv.org/abs/1712.02862), 2017.
+4. Sriram et al., [End-to-End Variational Networks for Accelerated MRI
+   Reconstruction](https://arxiv.org/abs/2004.06688), 2020.
+
+Please cite the fastMRI dataset paper and follow its applicable access and
+usage terms when using the dataset.

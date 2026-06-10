@@ -1,6 +1,8 @@
 # Data Directory
 
-This repository does not redistribute fastMRI data.
+This repository does not redistribute fastMRI data. Dataset details and
+attribution are available in the
+[fastMRI paper](https://arxiv.org/abs/1811.08839).
 
 Place downloaded single-coil knee HDF5 files in:
 
