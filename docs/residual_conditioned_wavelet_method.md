@@ -22,62 +22,79 @@ regularizers with `--unshared-denoiser`.
 
 ## Notation
 
-- `x_(t-1)`: complex image entering cascade `t`
-- `y`: undersampled measured k-space
-- `M`: binary sampling mask, expanded over k-space height
-- `F` and `F^-1`: centered orthonormal FFT and inverse FFT
-- `T`: total number of cascades
-- `B_low`, `B_mid`, `B_high`: radial k-space band masks
+- $x_{t-1}$: complex image entering cascade $t$
+- $y$: undersampled measured k-space
+- $M$: binary sampling mask, expanded over k-space height
+- $\mathcal{F}$ and $\mathcal{F}^{-1}$: centered orthonormal FFT and inverse FFT
+- $T$: total number of cascades
+- $B_{\mathrm{low}}$, $B_{\mathrm{mid}}$, $B_{\mathrm{high}}$: radial k-space band masks
 
 The implementation stores complex images and k-space as two real/imaginary
 channels.
 
 ## 1. Measured Band-Residual Controller
 
-At the start of cascade `t`, the predicted k-space is:
+At the start of cascade $t$, the predicted k-space is:
 
-```text
-k_pred,t = F x_(t-1)
-```
+$$
+k_{\mathrm{pred},t} = \mathcal{F}x_{t-1}.
+$$
 
 Residual statistics are computed only where k-space was acquired. For band
-`b` in `{low, mid, high}`, define the sampled band:
+$b \in \{\mathrm{low}, \mathrm{mid}, \mathrm{high}\}$, define the sampled band:
 
-```text
-S_b = M intersect B_b
-```
+$$
+S_b = M \cap B_b.
+$$
 
 ReWave-Net defines its conditioning statistic as:
 
-```text
-e_b,t = log(1 + mean_(u in S_b) |y(u) - k_pred,t(u)|
-                  / (mean_(u in S_b) |y(u)| + epsilon))
-```
+$$
+e_{b,t}
+=
+\log\left(
+1+
+\frac{
+\frac{1}{|S_b|}\sum_{u\in S_b}
+\left|y(u)-k_{\mathrm{pred},t}(u)\right|
+}{
+\frac{1}{|S_b|}\sum_{u\in S_b}|y(u)|+\varepsilon
+}
+\right).
+$$
 
 The radial bands use normalized-radius boundaries:
 
-```text
-B_low:  radius < 1/3
-B_mid:  1/3 <= radius < 2/3
-B_high: radius >= 2/3
-```
+$$
+\begin{aligned}
+B_{\mathrm{low}}  &= \{u : \rho(u) < 1/3\}, \\
+B_{\mathrm{mid}}  &= \{u : 1/3 \le \rho(u) < 2/3\}, \\
+B_{\mathrm{high}} &= \{u : \rho(u) \ge 2/3\}.
+\end{aligned}
+$$
 
 The sample-count normalization prevents bands with more acquired locations
 from automatically producing larger residual values. Measurement-magnitude
 normalization makes the statistic relative to the measured signal scale, and
 `log1p` compresses large values.
 
-Using zero-based cascade index `t`, the cascade progress is:
+Using zero-based cascade index $t$, the cascade progress is:
 
-```text
-p_t = t / max(T - 1, 1)
-```
+$$
+p_t = \frac{t}{\max(T-1,\,1)}.
+$$
 
 The condition vector supplied to every wavelet-routing block is:
 
-```text
-c_t = [e_low,t, e_mid,t, e_high,t, p_t]
-```
+$$
+c_t =
+\left[
+e_{\mathrm{low},t},
+e_{\mathrm{mid},t},
+e_{\mathrm{high},t},
+p_t
+\right].
+$$
 
 These residual definitions and their use as routing conditions are ReWave-Net
 design choices.
@@ -87,46 +104,61 @@ design choices.
 Each conditioned convolution block first extracts features and then applies an
 orthonormal 2D Haar transform:
 
-```text
-(LL, LH, HL, HH) = DWT(feature map)
-```
+$$
+(X_{LL}, X_{LH}, X_{HL}, X_{HH}) = \operatorname{DWT}(X).
+$$
 
-`LL` is processed by a large-kernel structure branch. `LH`, `HL`, and `HH`
+$X_{LL}$ is processed by a large-kernel structure branch. $X_{LH}$, $X_{HL}$, and $X_{HH}$
 share a detail branch:
 
-```text
-L = f_low(LL)
-H_q = f_high(q), q in {LH, HL, HH}
-```
+$$
+\begin{aligned}
+L &= f_{\mathrm{low}}(X_{LL}), \\
+H_q &= f_{\mathrm{high}}(X_q),
+\qquad q \in \{LH, HL, HH\}.
+\end{aligned}
+$$
 
 The block summarizes the processed branches:
 
-```text
-l_bar = GAP(L)
-h_bar = average_q GAP(|H_q|)
-```
+$$
+\bar{l} = \operatorname{GAP}(L),
+\qquad
+\bar{h} =
+\frac{1}{3}\sum_{q\in\{LH,HL,HH\}}
+\operatorname{GAP}(|H_q|).
+$$
 
 It then predicts one routing value per sample and feature channel:
 
-```text
-g = sigmoid(MLP([l_bar, h_bar, c_t]))
-```
+$$
+g = \sigma\!\left(
+\operatorname{MLP}\!\left([\bar{l},\bar{h},c_t]\right)
+\right).
+$$
 
 The routed subbands are:
 
-```text
-L_routed   = (1 - g) * L
-H_q,routed = g * H_q
-```
+$$
+L_{\mathrm{routed}} = (1-g)\odot L,
+\qquad
+H_{q,\mathrm{routed}} = g\odot H_q.
+$$
 
 and the routed feature map is reconstructed with the inverse Haar transform:
 
-```text
-z = IWT(L_routed, H_LH,routed, H_HL,routed, H_HH,routed)
-```
+$$
+z =
+\operatorname{IWT}\!\left(
+L_{\mathrm{routed}},
+H_{LH,\mathrm{routed}},
+H_{HL,\mathrm{routed}},
+H_{HH,\mathrm{routed}}
+\right).
+$$
 
-When `g` is closer to zero, that feature channel retains more processed `LL`
-structure. When `g` is closer to one, it retains more processed detail-band
+When $g$ is closer to zero, that feature channel retains more processed $LL$
+structure. When $g$ is closer to one, it retains more processed detail-band
 features.
 
 The three measured residuals jointly condition the MLP. The implementation
@@ -135,22 +167,31 @@ subband, and the gate is channel-wise rather than spatially varying.
 
 ## 3. Cascade-Wise Soft Data Consistency
 
-After the wavelet U-Net produces candidate reconstruction `x_tilde_t`,
+After the wavelet U-Net produces candidate reconstruction $\widetilde{x}_t$,
 ReWave-Net applies weighted k-space data consistency:
 
-```text
-k_t = F x_tilde_t + lambda_t * M * (y - F x_tilde_t)
-x_t = F^-1 k_t
-```
+$$
+\begin{aligned}
+k_t
+&=
+\mathcal{F}\widetilde{x}_t
++
+\lambda_t M\odot
+\left(y-\mathcal{F}\widetilde{x}_t\right), \\
+x_t &= \mathcal{F}^{-1}k_t.
+\end{aligned}
+$$
 
 Each cascade has an independently learned scalar:
 
-```text
-lambda_t = sigmoid(alpha_t), lambda_t in [0, 1]
-```
+$$
+\lambda_t = \sigma(\alpha_t),
+\qquad
+\lambda_t \in [0,1].
+$$
 
-`lambda_t = 0` keeps the network prediction unchanged at measured locations,
-while `lambda_t = 1` replaces those locations with the measurements. Weighted
+$\lambda_t=0$ keeps the network prediction unchanged at measured locations,
+while $\lambda_t=1$ replaces those locations with the measurements. Weighted
 data consistency and unrolled cascades are standard reconstruction ideas; the
 cascade-wise weights are part of the complete ReWave-Net design but are not
 presented as the main methodological contribution.
