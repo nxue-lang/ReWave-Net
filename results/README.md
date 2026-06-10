@@ -44,7 +44,9 @@ the Complex U-Net baseline use matched training configurations.
 
 ## Pretrained Checkpoint
 
-The best checkpoint is attached to the GitHub `v0.1.0` release as:
+The best checkpoint is attached to the
+[GitHub `v0.1.0` release](https://github.com/nxue-lang/ReWave-Net/releases/tag/v0.1.0)
+as:
 
 ```text
 rewave_c5_acc4_best.pt

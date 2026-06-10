@@ -8,6 +8,9 @@ version = "0.1.0"
 description = "Measurement-residual-conditioned wavelet unrolled MRI reconstruction."
 readme = "README.md"
 requires-python = ">=3.9"
+authors = [
+    { name = "Nancy Xue" },
+]
 keywords = ["MRI", "image reconstruction", "wavelets", "unrolled networks"]
 dependencies = [
     "numpy",
@@ -20,6 +23,8 @@ dependencies = [
 
 [project.urls]
 Repository = "https://github.com/nxue-lang/ReWave-Net"
+Documentation = "https://github.com/nxue-lang/ReWave-Net#readme"
+Releases = "https://github.com/nxue-lang/ReWave-Net/releases"
 
 [tool.setuptools.package-dir]
 "" = "src"

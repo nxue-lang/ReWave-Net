@@ -1,5 +1,9 @@
 # ReWave-Net
 
+[![CI](https://github.com/nxue-lang/ReWave-Net/actions/workflows/ci.yml/badge.svg)](https://github.com/nxue-lang/ReWave-Net/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/nxue-lang/ReWave-Net)](https://github.com/nxue-lang/ReWave-Net/releases/tag/v0.1.0)
+[![Python](https://img.shields.io/badge/python-%3E%3D3.9-blue)](https://www.python.org/)
+
 ReWave-Net is a measurement-residual-conditioned wavelet unrolled network for
 accelerated single-coil MRI reconstruction. At every cascade, it:
 
@@ -63,8 +67,8 @@ zero-filled, unrolled Complex U-Net, and ReWave-Net comparisons.
 ReWave-Net improves PSNR by `0.6072 dB` over the matched unrolled Complex
 U-Net baseline. These are research results on the current fixed split, not a
 clinical validation claim. See [the results notes](docs/results.md) for
-experiment details and remaining ablations. Curated metrics, training history,
-configuration, and a reconstruction example are available in
+experiment details and remaining ablations. A curated result summary,
+configuration, and reconstruction example are available in
 [`results/`](results/README.md).
 
 ## Pretrained Model
@@ -89,7 +93,7 @@ python scripts/evaluate_rewave_net.py \
 ```text
 data/                  Local fastMRI data location; data files are ignored
 docs/                  Method, results, and experiment documentation
-results/               Curated metrics, configuration, training history, figure
+results/               Curated result summary, configuration, and example figure
 scripts/               Training, evaluation, baseline, and smoke-test scripts
 src/mri_recon/         Reusable models, datasets, metrics, transforms, and DC
 outputs/               Local checkpoints, figures, metrics, and splits; ignored
@@ -183,6 +187,17 @@ The complete public script inventory is documented in
 
 This repository is research code for accelerated MRI reconstruction. It is not
 intended for clinical use.
+
+## Citation
+
+Citation metadata is available in [`CITATION.cff`](CITATION.cff). Until a
+paper citation is available, cite the software release:
+
+```text
+Nancy Xue. ReWave-Net: Measurement-residual-conditioned wavelet unrolled MRI
+reconstruction. Version 0.1.0, 2026.
+https://github.com/nxue-lang/ReWave-Net
+```
 
 ## References and Acknowledgements
 
