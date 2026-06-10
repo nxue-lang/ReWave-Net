@@ -32,6 +32,22 @@ where each `lambda_t` is independently learned and constrained to `[0, 1]`.
 See [the method description](docs/residual_conditioned_wavelet_method.md) for
 the implementation-level details.
 
+## Contribution Boundary
+
+ReWave-Net adopts standard components: a complex U-Net regularizer, an
+orthonormal Haar DWT/IWT, an unrolled cascade structure, and weighted k-space
+data consistency. The proposed design is their measurement-driven connection:
+
+```text
+band-wise residual measured only at acquired k-space locations
+  -> residual-conditioned wavelet structure/detail routing
+  -> cascade-wise learned soft data consistency
+```
+
+At every cascade, the current measured-data mismatch is recomputed and used to
+condition all wavelet-routing blocks. ReWave-Net does not claim the individual
+standard components as new.
+
 ## Results
 
 The current matched experiment uses the same multi-file split, sampling rule,
@@ -150,8 +166,10 @@ intended for clinical use.
 
 ## References and Acknowledgements
 
-This work uses the fastMRI single-coil knee dataset and builds on established
-ideas from U-Net architectures and model-based unrolled MRI reconstruction:
+This work uses the fastMRI single-coil knee dataset and a U-Net-style
+regularizer. MoDL and End-to-End VarNet are listed as broader related context
+for model-based unrolled MRI reconstruction; ReWave-Net does not reuse their
+implementations.
 
 1. Zbontar et al., [fastMRI: An Open Dataset and Benchmarks for Accelerated
    MRI](https://arxiv.org/abs/1811.08839), 2018.
