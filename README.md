@@ -52,7 +52,6 @@ experiment details and remaining ablations.
 ## Repository Layout
 
 ```text
-configs/               Small experiment configurations
 data/                  Local fastMRI data location; data files are ignored
 docs/                  Method, results, and experiment documentation
 scripts/               Training, evaluation, baseline, and smoke-test scripts
@@ -63,11 +62,11 @@ outputs/               Local checkpoints, figures, metrics, and splits; ignored
 The main implementation is:
 
 - `src/mri_recon/models/residual_conditioned_wavelet_unet.py`
-- `src/mri_recon/models/unrolled_frequency_aware.py`
+- `src/mri_recon/models/rewave_net.py`
 - `src/mri_recon/reconstruction/torch_ops.py`
 
-Earlier Complex U-Net, frequency-aware, and KAN-style experiments remain in
-the repository as baselines and historical ablations.
+The repository keeps the matched unrolled Complex U-Net as the primary
+baseline. Earlier exploratory models remain available in Git history.
 
 ## Installation
 
@@ -99,14 +98,14 @@ Data files and generated outputs are intentionally excluded from Git. See
 Run the model smoke test without downloading the dataset:
 
 ```bash
-python scripts/test_residual_conditioned_wavelet_model.py
+python scripts/test_rewave_net.py
 ```
 
 Run a small end-to-end training check after placing the data:
 
 ```bash
-python scripts/train_unrolled_frequency_aware_recon_multifile.py \
-  --model-type residual_wavelet \
+python scripts/train_rewave_net.py \
+  --model-type rewave \
   --epochs 1 \
   --num-cascades 2 \
   --base-channels 4 \
@@ -120,20 +119,20 @@ python scripts/train_unrolled_frequency_aware_recon_multifile.py \
 Run the full matched ReWave-Net experiment:
 
 ```bash
-python scripts/train_unrolled_frequency_aware_recon_multifile.py \
-  --model-type residual_wavelet \
+python scripts/train_rewave_net.py \
+  --model-type rewave \
   --epochs 20 \
   --num-cascades 5 \
   --base-channels 8 \
   --seed 42 \
   --mask-seed 42
 
-python scripts/evaluate_unrolled_frequency_aware_recon.py \
-  --checkpoint-path outputs/checkpoints/unrolled_residual_wavelet_recon_c5_acc4_best.pt
+python scripts/evaluate_rewave_net.py \
+  --checkpoint-path outputs/checkpoints/rewave_c5_acc4_best.pt
 ```
 
-The complete script inventory and historical baseline commands are documented
-in [scripts/README.md](scripts/README.md).
+The complete public script inventory is documented in
+[scripts/README.md](scripts/README.md).
 
 ## Reproducibility
 

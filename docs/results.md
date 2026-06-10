@@ -36,29 +36,29 @@ The strongest component-level claim requires matched ablations for:
 1. ReWave-Net without measured-residual conditioning;
 2. ReWave-Net without wavelet routing;
 3. ReWave-Net with fixed rather than learned soft-DC weights; and
-4. matched frequency-aware and KAN-style historical baselines.
+4. additional component-level ablations when making stronger causal claims.
 
 ## Reproduction
 
 Train and evaluate ReWave-Net:
 
 ```bash
-python scripts/train_unrolled_frequency_aware_recon_multifile.py \
-  --model-type residual_wavelet \
+python scripts/train_rewave_net.py \
+  --model-type rewave \
   --epochs 20 \
   --num-cascades 5 \
   --base-channels 8 \
   --seed 42 \
   --mask-seed 42
 
-python scripts/evaluate_unrolled_frequency_aware_recon.py \
-  --checkpoint-path outputs/checkpoints/unrolled_residual_wavelet_recon_c5_acc4_best.pt
+python scripts/evaluate_rewave_net.py \
+  --checkpoint-path outputs/checkpoints/rewave_c5_acc4_best.pt
 ```
 
 Summarize available matched models:
 
 ```bash
-python scripts/summarize_unrolled_ablation.py
+python scripts/summarize_matched_comparison.py
 ```
 
 Generated checkpoints and metrics remain local under `outputs/` and are not

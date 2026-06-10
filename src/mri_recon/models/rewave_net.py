@@ -7,8 +7,6 @@ import torch
 from torch import nn
 
 from mri_recon.models.complex_unet import ComplexUNet
-from mri_recon.models.frequency_aware_unet import FrequencyAwareComplexUNet
-from mri_recon.models.kan_frequency_aware_unet import KANFrequencyAwareComplexUNet
 from mri_recon.models.residual_conditioned_wavelet_unet import (
     ResidualConditionedWaveletComplexUNet,
 )
@@ -117,26 +115,6 @@ class _UnrolledComplexReconBase(nn.Module):
         return current
 
 
-class UnrolledFrequencyAwareRecon(_UnrolledComplexReconBase):
-    """Unrolled reconstruction using FrequencyAwareComplexUNet as regularizer."""
-
-    def __init__(
-        self,
-        num_cascades: int = 5,
-        base_channels: int = 16,
-        shared_denoiser: bool = True,
-        initial_dc_weight: float = 0.1,
-    ) -> None:
-        super().__init__(
-            denoiser_factory=lambda: FrequencyAwareComplexUNet(
-                base_channels=base_channels
-            ),
-            num_cascades=num_cascades,
-            shared_denoiser=shared_denoiser,
-            initial_dc_weight=initial_dc_weight,
-        )
-
-
 class UnrolledComplexUNetRecon(_UnrolledComplexReconBase):
     """Unrolled reconstruction using ComplexUNet as the regularizer baseline."""
 
@@ -155,27 +133,7 @@ class UnrolledComplexUNetRecon(_UnrolledComplexReconBase):
         )
 
 
-class UnrolledKANFrequencyAwareRecon(_UnrolledComplexReconBase):
-    """Unrolled reconstruction using KAN-style FA-ComplexUNet regularizer."""
-
-    def __init__(
-        self,
-        num_cascades: int = 5,
-        base_channels: int = 16,
-        shared_denoiser: bool = True,
-        initial_dc_weight: float = 0.1,
-    ) -> None:
-        super().__init__(
-            denoiser_factory=lambda: KANFrequencyAwareComplexUNet(
-                base_channels=base_channels
-            ),
-            num_cascades=num_cascades,
-            shared_denoiser=shared_denoiser,
-            initial_dc_weight=initial_dc_weight,
-        )
-
-
-class UnrolledResidualConditionedWaveletRecon(_UnrolledComplexReconBase):
+class ReWaveNet(_UnrolledComplexReconBase):
     """Unrolled reconstruction with measured-residual-conditioned wavelet routing."""
 
     def __init__(

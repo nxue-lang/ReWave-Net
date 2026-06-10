@@ -7,9 +7,7 @@ add_project_src_to_path()
 import torch
 
 from mri_recon.models.residual_conditioned_wavelet_unet import haar_dwt2, haar_iwt2
-from mri_recon.models.unrolled_frequency_aware import (
-    UnrolledResidualConditionedWaveletRecon,
-)
+from mri_recon.models.rewave_net import ReWaveNet
 from mri_recon.reconstruction.torch_ops import normalized_band_residuals_torch
 
 
@@ -40,7 +38,7 @@ def main() -> None:
     if not torch.isfinite(band_residuals).all():
         raise AssertionError("Band residuals contain non-finite values")
 
-    model = UnrolledResidualConditionedWaveletRecon(
+    model = ReWaveNet(
         num_cascades=2,
         base_channels=4,
     ).to(device)
@@ -61,7 +59,7 @@ def main() -> None:
     print(f"Band residual shape: {tuple(band_residuals.shape)}")
     print(f"Prediction shape: {tuple(prediction.shape)}")
     print(f"Parameters: {parameter_count:,}")
-    print("Residual-conditioned wavelet model smoke test passed.")
+    print("ReWave-Net smoke test passed.")
 
 
 if __name__ == "__main__":

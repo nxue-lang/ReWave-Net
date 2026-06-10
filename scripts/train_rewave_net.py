@@ -19,25 +19,20 @@ from tqdm import tqdm
 from mri_recon.data.multi_file_complex_dataset import (
     MultiFileFastMRIComplexSingleCoilDataset,
 )
-from mri_recon.models.unrolled_frequency_aware import (
-    UnrolledComplexUNetRecon,
-    UnrolledFrequencyAwareRecon,
-    UnrolledKANFrequencyAwareRecon,
-    UnrolledResidualConditionedWaveletRecon,
-)
+from mri_recon.models.rewave_net import ReWaveNet, UnrolledComplexUNetRecon
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Train an unrolled frequency-aware MRI reconstruction model."
+        description="Train ReWave-Net or its matched Complex U-Net baseline."
     )
 
     parser.add_argument("--data-dir", type=str, default="data/knee_singlecoil_val")
     parser.add_argument(
         "--model-type",
         type=str,
-        choices=["complex", "fa", "kan", "residual_wavelet"],
-        default="residual_wavelet",
+        choices=["rewave", "complex"],
+        default="rewave",
     )
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch-size", type=int, default=1)
@@ -139,12 +134,7 @@ def build_model(args: argparse.Namespace) -> nn.Module:
 
     if args.model_type == "complex":
         return UnrolledComplexUNetRecon(**model_kwargs)
-    if args.model_type == "fa":
-        return UnrolledFrequencyAwareRecon(**model_kwargs)
-    if args.model_type == "residual_wavelet":
-        return UnrolledResidualConditionedWaveletRecon(**model_kwargs)
-
-    return UnrolledKANFrequencyAwareRecon(**model_kwargs)
+    return ReWaveNet(**model_kwargs)
 
 
 def save_training_metrics(
@@ -255,7 +245,7 @@ def main() -> None:
     if args.max_test_files is not None:
         test_paths = test_paths[: args.max_test_files]
 
-    split_path = splits_dir / f"unrolled_multifile_split_seed{args.seed}.csv"
+    split_path = splits_dir / f"rewave_net_split_seed{args.seed}.csv"
     save_file_split(
         train_paths=train_paths, test_paths=test_paths, output_path=split_path
     )
@@ -323,11 +313,11 @@ def main() -> None:
     scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
 
     checkpoint_name = (
-        f"unrolled_{args.model_type}_recon_c{args.num_cascades}_"
+        f"{args.model_type}_c{args.num_cascades}_"
         f"acc{args.acceleration}_best.pt"
     )
     last_checkpoint_name = (
-        f"unrolled_{args.model_type}_recon_c{args.num_cascades}_"
+        f"{args.model_type}_c{args.num_cascades}_"
         f"acc{args.acceleration}_last.pt"
     )
     best_val_loss = float("inf")
@@ -464,17 +454,17 @@ def main() -> None:
 
     metrics_path = (
         metrics_dir
-        / f"unrolled_{args.model_type}_recon_c{args.num_cascades}_training_metrics.csv"
+        / f"{args.model_type}_c{args.num_cascades}_training_metrics.csv"
     )
     save_training_metrics(history, metrics_path)
 
     loss_curve_path = (
         figures_dir
-        / f"unrolled_{args.model_type}_recon_c{args.num_cascades}_loss_curve.png"
+        / f"{args.model_type}_c{args.num_cascades}_loss_curve.png"
     )
     plot_loss_curve(history, loss_curve_path)
 
-    print("Unrolled frequency-aware training completed.")
+    print("ReWave-Net training completed.")
     print(f"Best validation loss: {best_val_loss:.6f}")
     print(f"Saved checkpoint to: {checkpoints_dir / checkpoint_name}")
     print(f"Saved last checkpoint to: {checkpoints_dir / last_checkpoint_name}")

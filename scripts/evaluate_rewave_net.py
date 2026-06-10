@@ -21,24 +21,19 @@ from mri_recon.evaluation.complex_metrics import (
     compute_complex_channel_metrics,
     target_scaled_magnitude_pair,
 )
-from mri_recon.models.unrolled_frequency_aware import (
-    UnrolledComplexUNetRecon,
-    UnrolledFrequencyAwareRecon,
-    UnrolledKANFrequencyAwareRecon,
-    UnrolledResidualConditionedWaveletRecon,
-)
+from mri_recon.models.rewave_net import ReWaveNet, UnrolledComplexUNetRecon
 from mri_recon.visualization import save_image_grid
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Evaluate an unrolled frequency-aware MRI reconstruction model."
+        description="Evaluate ReWave-Net or its matched Complex U-Net baseline."
     )
 
     parser.add_argument(
         "--checkpoint-path",
         type=str,
-        default="outputs/checkpoints/unrolled_residual_wavelet_recon_c5_acc4_best.pt",
+        default="outputs/checkpoints/rewave_c5_acc4_best.pt",
     )
     parser.add_argument("--data-dir", type=str, default="data/knee_singlecoil_val")
     parser.add_argument("--batch-size", type=int, default=1)
@@ -57,7 +52,7 @@ def get_device() -> torch.device:
 
 
 def build_model_from_checkpoint_args(checkpoint_args: dict[str, object]) -> nn.Module:
-    model_type = str(checkpoint_args.get("model_type", "kan"))
+    model_type = str(checkpoint_args.get("model_type", "rewave"))
     num_cascades = int(checkpoint_args.get("num_cascades", 5))
     base_channels = int(checkpoint_args.get("base_channels", 8))
     shared_denoiser = not bool(checkpoint_args.get("unshared_denoiser", False))
@@ -72,21 +67,17 @@ def build_model_from_checkpoint_args(checkpoint_args: dict[str, object]) -> nn.M
 
     if model_type == "complex":
         return UnrolledComplexUNetRecon(**model_kwargs)
-    if model_type == "fa":
-        return UnrolledFrequencyAwareRecon(**model_kwargs)
-    if model_type == "residual_wavelet":
-        return UnrolledResidualConditionedWaveletRecon(**model_kwargs)
-
-    return UnrolledKANFrequencyAwareRecon(**model_kwargs)
+    if model_type in {"rewave", "residual_wavelet"}:
+        return ReWaveNet(**model_kwargs)
+    raise ValueError(f"Unsupported model_type in checkpoint: {model_type}")
 
 
 def method_name_from_checkpoint_args(checkpoint_args: dict[str, object]) -> str:
-    model_type = str(checkpoint_args.get("model_type", "kan"))
+    model_type = str(checkpoint_args.get("model_type", "rewave"))
     return {
         "complex": "unrolled_complex_unet",
-        "fa": "unrolled_fa_complex_unet",
-        "kan": "unrolled_kan_fa_complex_unet",
-        "residual_wavelet": "unrolled_residual_conditioned_wavelet",
+        "rewave": "rewave_net",
+        "residual_wavelet": "rewave_net",
     }.get(model_type, f"unrolled_{model_type}")
 
 
@@ -282,7 +273,7 @@ def main() -> None:
                             "Absolute Error",
                         ],
                         output_path=figures_dir
-                        / "unrolled_frequency_aware_recon_example.png",
+                        / f"{method_name}_example.png",
                     )
                     example_saved = True
 
@@ -296,7 +287,7 @@ def main() -> None:
     save_summary_csv(summary_rows, summary_path)
     save_per_slice_csv(per_slice_rows, per_slice_path)
 
-    print("Unrolled frequency-aware evaluation completed.")
+    print("ReWave-Net evaluation completed.")
     print(f"Checkpoint: {checkpoint_path}")
     print()
     for row in summary_rows:

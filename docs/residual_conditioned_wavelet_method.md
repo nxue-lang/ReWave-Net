@@ -63,20 +63,20 @@ measured-data mismatch.
 Smoke test:
 
 ```powershell
-python scripts\test_residual_conditioned_wavelet_model.py
+python scripts/test_rewave_net.py
 ```
 
 Small training run:
 
 ```powershell
-python scripts\train_unrolled_frequency_aware_recon_multifile.py --model-type residual_wavelet --epochs 1 --num-cascades 2 --base-channels 4 --max-train-files 2 --max-test-files 1 --max-train-samples 8 --max-test-samples 4 --disable-progress
+python scripts/train_rewave_net.py --model-type rewave --epochs 1 --num-cascades 2 --base-channels 4 --max-train-files 2 --max-test-files 1 --max-train-samples 8 --max-test-samples 4 --disable-progress
 ```
 
 Full matched experiment:
 
 ```powershell
-python scripts\train_unrolled_frequency_aware_recon_multifile.py --model-type residual_wavelet --epochs 20 --num-cascades 5 --base-channels 8 --seed 42 --mask-seed 42
-python scripts\evaluate_unrolled_frequency_aware_recon.py --checkpoint-path outputs\checkpoints\unrolled_residual_wavelet_recon_c5_acc4_best.pt
+python scripts/train_rewave_net.py --model-type rewave --epochs 20 --num-cascades 5 --base-channels 8 --seed 42 --mask-seed 42
+python scripts/evaluate_rewave_net.py --checkpoint-path outputs/checkpoints/rewave_c5_acc4_best.pt
 ```
 
 ## Required ablation
@@ -91,5 +91,4 @@ Unrolled Residual-Conditioned Wavelet U-Net
 ```
 
 The new mechanism should only be claimed as beneficial if it improves the
-matched baselines. The current KAN-style files remain in the repository as
-historical baselines, not as the proposed method.
+matched unrolled Complex U-Net baseline.
