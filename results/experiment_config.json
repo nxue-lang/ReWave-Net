@@ -1,0 +1,31 @@
+{
+  "dataset": "fastMRI single-coil knee",
+  "train_volume_count": 159,
+  "test_volume_count": 40,
+  "train_split_blake2s": "c3f49347692ef2806afb3db6",
+  "test_split_blake2s": "e281eb8779521500f31e5870",
+  "acceleration": 4,
+  "center_fraction": 0.08,
+  "num_cascades": 5,
+  "base_channels": 8,
+  "shared_denoiser": true,
+  "initial_dc_weight": 0.1,
+  "epochs": 20,
+  "batch_size": 1,
+  "learning_rate": 0.0002,
+  "train_ratio": 0.8,
+  "seed": 42,
+  "mask_seed": 42,
+  "middle_slice_margin": 5,
+  "best_epoch": 20,
+  "best_validation_complex_l1": 0.02967023079558699,
+  "learned_dc_weights": [
+    0.7720393538475037,
+    0.910376250743866,
+    0.9096140265464783,
+    0.938000500202179,
+    0.9584242105484009
+  ],
+  "checkpoint_asset": "rewave_c5_acc4_best.pt",
+  "checkpoint_sha256": "5d0b7b523e0d220f66e5f965a2e742c48297b058c0826d055c44376c0ebb7f05"
+}

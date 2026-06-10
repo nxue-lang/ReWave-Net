@@ -63,13 +63,33 @@ zero-filled, unrolled Complex U-Net, and ReWave-Net comparisons.
 ReWave-Net improves PSNR by `0.6072 dB` over the matched unrolled Complex
 U-Net baseline. These are research results on the current fixed split, not a
 clinical validation claim. See [the results notes](docs/results.md) for
-experiment details and remaining ablations.
+experiment details and remaining ablations. Curated metrics, training history,
+configuration, and a reconstruction example are available in
+[`results/`](results/README.md).
+
+## Pretrained Model
+
+The best five-cascade ReWave-Net checkpoint is published with the
+[`v0.1.0` GitHub release](https://github.com/nxue-lang/ReWave-Net/releases/tag/v0.1.0):
+
+```text
+rewave_c5_acc4_best.pt
+SHA256: 5d0b7b523e0d220f66e5f965a2e742c48297b058c0826d055c44376c0ebb7f05
+```
+
+Evaluate it with:
+
+```bash
+python scripts/evaluate_rewave_net.py \
+  --checkpoint-path path/to/rewave_c5_acc4_best.pt
+```
 
 ## Repository Layout
 
 ```text
 data/                  Local fastMRI data location; data files are ignored
 docs/                  Method, results, and experiment documentation
+results/               Curated metrics, configuration, training history, figure
 scripts/               Training, evaluation, baseline, and smoke-test scripts
 src/mri_recon/         Reusable models, datasets, metrics, transforms, and DC
 outputs/               Local checkpoints, figures, metrics, and splits; ignored
