@@ -36,57 +36,58 @@ channels.
 
 At the start of cascade $t$, the predicted k-space is:
 
-$$
+```math
 k_{\mathrm{pred},t} = \mathcal{F}x_{t-1}.
-$$
+```
 
 Residual statistics are computed only where k-space was acquired. For band
 $b \in \{\mathrm{low}, \mathrm{mid}, \mathrm{high}\}$, define the sampled band:
 
-$$
+```math
 S_b = M \cap B_b.
-$$
+```
 
-ReWave-Net defines its conditioning statistic as:
+Let $n_b=\max(|S_b|,1)$. ReWave-Net defines its conditioning statistic as:
 
-$$
+```math
+\begin{aligned}
+\bar{r}_{b,t}
+&= \frac{1}{n_b}\sum_{u\in S_b}
+\left|y(u)-k_{\mathrm{pred},t}(u)\right|, \\
+\bar{m}_b
+&= \frac{1}{n_b}\sum_{u\in S_b}|y(u)|, \\
 e_{b,t}
-=
-\log\left(
-1+
-\frac{
-\frac{1}{|S_b|}\sum_{u\in S_b}
-\left|y(u)-k_{\mathrm{pred},t}(u)\right|
-}{
-\frac{1}{|S_b|}\sum_{u\in S_b}|y(u)|+\varepsilon
-}
+&= \log\left(1+
+\min\left(\frac{\bar{r}_{b,t}}{\bar{m}_b+\varepsilon},100\right)
 \right).
-$$
+\end{aligned}
+```
 
 The radial bands use normalized-radius boundaries:
 
-$$
+```math
 \begin{aligned}
 B_{\mathrm{low}}  &= \{u : \rho(u) < 1/3\}, \\
 B_{\mathrm{mid}}  &= \{u : 1/3 \le \rho(u) < 2/3\}, \\
 B_{\mathrm{high}} &= \{u : \rho(u) \ge 2/3\}.
 \end{aligned}
-$$
+```
 
 The sample-count normalization prevents bands with more acquired locations
 from automatically producing larger residual values. Measurement-magnitude
-normalization makes the statistic relative to the measured signal scale, and
-`log1p` compresses large values.
+normalization makes the statistic relative to the measured signal scale.
+Clipping limits extreme relative residuals, and `log1p` compresses their
+dynamic range.
 
 Using zero-based cascade index $t$, the cascade progress is:
 
-$$
+```math
 p_t = \frac{t}{\max(T-1,\,1)}.
-$$
+```
 
 The condition vector supplied to every wavelet-routing block is:
 
-$$
+```math
 c_t =
 \left[
 e_{\mathrm{low},t},
@@ -94,7 +95,7 @@ e_{\mathrm{mid},t},
 e_{\mathrm{high},t},
 p_t
 \right].
-$$
+```
 
 These residual definitions and their use as routing conditions are ReWave-Net
 design choices.
@@ -104,58 +105,68 @@ design choices.
 Each conditioned convolution block first extracts features and then applies an
 orthonormal 2D Haar transform:
 
-$$
-(X_{LL}, X_{LH}, X_{HL}, X_{HH}) = \operatorname{DWT}(X).
-$$
+```math
+(X_{LL}, X_{LH}, X_{HL}, X_{HH}) = \mathrm{DWT}(X).
+```
 
 $X_{LL}$ is processed by a large-kernel structure branch. $X_{LH}$, $X_{HL}$, and $X_{HH}$
 share a detail branch:
 
-$$
+```math
 \begin{aligned}
 L &= f_{\mathrm{low}}(X_{LL}), \\
 H_q &= f_{\mathrm{high}}(X_q),
 \qquad q \in \{LH, HL, HH\}.
 \end{aligned}
-$$
+```
 
 The block summarizes the processed branches:
 
-$$
-\bar{l} = \operatorname{GAP}(L),
+```math
+\bar{l} = \mathrm{GAP}(L),
 \qquad
 \bar{h} =
 \frac{1}{3}\sum_{q\in\{LH,HL,HH\}}
-\operatorname{GAP}(|H_q|).
-$$
+\mathrm{GAP}(|H_q|).
+```
 
 It then predicts one routing value per sample and feature channel:
 
-$$
+```math
 g = \sigma\!\left(
-\operatorname{MLP}\!\left([\bar{l},\bar{h},c_t]\right)
+\mathrm{MLP}\!\left([\bar{l},\bar{h},c_t]\right)
 \right).
-$$
+```
+
+For a block with $C$ feature channels, $g\in[0,1]^C$ contains one routing
+value per sample and channel and is broadcast over spatial dimensions.
 
 The routed subbands are:
 
-$$
+```math
 L_{\mathrm{routed}} = (1-g)\odot L,
 \qquad
 H_{q,\mathrm{routed}} = g\odot H_q.
-$$
+```
 
 and the routed feature map is reconstructed with the inverse Haar transform:
 
-$$
-z =
-\operatorname{IWT}\!\left(
+```math
+z_{\mathrm{routed}} =
+\mathrm{IWT}\!\left(
 L_{\mathrm{routed}},
 H_{LH,\mathrm{routed}},
 H_{HL,\mathrm{routed}},
 H_{HH,\mathrm{routed}}
 \right).
-$$
+```
+
+The block then applies a learned output projection and adds the input
+residually:
+
+```math
+z_{\mathrm{out}} = X + f_{\mathrm{out}}(z_{\mathrm{routed}}).
+```
 
 When $g$ is closer to zero, that feature channel retains more processed $LL$
 structure. When $g$ is closer to one, it retains more processed detail-band
@@ -170,7 +181,7 @@ subband, and the gate is channel-wise rather than spatially varying.
 After the wavelet U-Net produces candidate reconstruction $\widetilde{x}_t$,
 ReWave-Net applies weighted k-space data consistency:
 
-$$
+```math
 \begin{aligned}
 k_t
 &=
@@ -180,15 +191,15 @@ k_t
 \left(y-\mathcal{F}\widetilde{x}_t\right), \\
 x_t &= \mathcal{F}^{-1}k_t.
 \end{aligned}
-$$
+```
 
 Each cascade has an independently learned scalar:
 
-$$
+```math
 \lambda_t = \sigma(\alpha_t),
 \qquad
 \lambda_t \in [0,1].
-$$
+```
 
 $\lambda_t=0$ keeps the network prediction unchanged at measured locations,
 while $\lambda_t=1$ replaces those locations with the measurements. Weighted

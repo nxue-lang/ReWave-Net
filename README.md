@@ -20,21 +20,21 @@ accelerated single-coil MRI reconstruction. At every cascade, it:
 For cascade $t$, ReWave-Net computes measured residual statistics from the
 current complex reconstruction $x_{t-1}$:
 
-$$
+```math
 r_t = M\odot\left(y-\mathcal{F}x_{t-1}\right).
-$$
+```
 
 The low-, mid-, and high-band residual summaries, together with normalized
 cascade progress, condition every wavelet-routing block in a shared complex
 U-Net regularizer. The candidate reconstruction is then updated using:
 
-$$
+```math
 k_t =
 \mathcal{F}\widetilde{x}_t
 +
 \lambda_t M\odot
 \left(y-\mathcal{F}\widetilde{x}_t\right).
-$$
+```
 
 where each $\lambda_t$ is independently learned and constrained to $[0,1]$.
 See [the method description](docs/residual_conditioned_wavelet_method.md) for
