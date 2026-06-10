@@ -36,9 +36,7 @@ the Complex U-Net baseline use matched training configurations.
 
 ## Files
 
-- `matched_comparison.csv`: compact matched comparison table.
-- `rewave_net_metrics.csv`: clean ReWave-Net and zero-filled evaluation output.
-- `rewave_net_training_history.csv`: epoch-level losses and learned DC weights.
+- `experiment_config.json`: compact experiment and checkpoint metadata.
 - `rewave_net_example.png`: representative target, zero-filled reconstruction,
   ReWave-Net reconstruction, and error map.
 
