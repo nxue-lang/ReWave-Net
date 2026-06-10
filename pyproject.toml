@@ -3,10 +3,12 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mri-reconstruction-pipeline"
+name = "rewave-net"
 version = "0.1.0"
-description = "A reproducible MRI reconstruction pipeline with data consistency and modern deep learning baselines."
+description = "Measurement-residual-conditioned wavelet unrolled MRI reconstruction."
+readme = "README.md"
 requires-python = ">=3.9"
+keywords = ["MRI", "image reconstruction", "wavelets", "unrolled networks"]
 dependencies = [
     "numpy",
     "h5py",
@@ -17,6 +19,9 @@ dependencies = [
     "torchvision",
     "tqdm",
 ]
+
+[project.urls]
+Repository = "https://github.com/nxue-lang/ReWave-Net"
 
 [tool.setuptools.package-dir]
 "" = "src"

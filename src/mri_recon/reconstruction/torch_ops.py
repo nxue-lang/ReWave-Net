@@ -105,3 +105,45 @@ def apply_hard_data_consistency_torch(
         mask=mask,
         dc_weight=1.0,
     )
+
+
+def normalized_band_residuals_torch(
+    predicted_channels: torch.Tensor,
+    measured_kspace_channels: torch.Tensor,
+    mask: torch.Tensor,
+    eps: float = 1e-6,
+) -> torch.Tensor:
+    """Return relative measured residuals for low, mid, and high k-space bands."""
+    predicted_image = channels_to_complex_torch(predicted_channels)
+    measured_kspace = channels_to_complex_torch(measured_kspace_channels)
+    predicted_kspace = fft2c_torch(predicted_image)
+    expanded_mask = expand_mask_for_torch_kspace(mask=mask, kspace=predicted_kspace)
+
+    height, width = predicted_kspace.shape[-2:]
+    y = torch.linspace(-1.0, 1.0, height, device=predicted_kspace.device)
+    x = torch.linspace(-1.0, 1.0, width, device=predicted_kspace.device)
+    radius = torch.sqrt(y[:, None].square() + x[None, :].square())
+    radius = radius / radius.max()
+    band_masks = (
+        radius < 1.0 / 3.0,
+        (radius >= 1.0 / 3.0) & (radius < 2.0 / 3.0),
+        radius >= 2.0 / 3.0,
+    )
+
+    absolute_residual = (measured_kspace - predicted_kspace).abs()
+    measured_magnitude = measured_kspace.abs()
+    residuals = []
+    for band_mask in band_masks:
+        sampled_band = expanded_mask & band_mask[None, ...]
+        sampled_band_float = sampled_band.to(absolute_residual.dtype)
+        count = sampled_band_float.sum(dim=(-2, -1)).clamp_min(1.0)
+        mean_residual = (absolute_residual * sampled_band_float).sum(
+            dim=(-2, -1)
+        ) / count
+        mean_measurement = (measured_magnitude * sampled_band_float).sum(
+            dim=(-2, -1)
+        ) / count
+        relative_residual = mean_residual / (mean_measurement + eps)
+        residuals.append(torch.log1p(relative_residual.clamp(max=100.0)))
+
+    return torch.stack(residuals, dim=1)

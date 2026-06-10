@@ -25,6 +25,7 @@ from mri_recon.models.unrolled_frequency_aware import (
     UnrolledComplexUNetRecon,
     UnrolledFrequencyAwareRecon,
     UnrolledKANFrequencyAwareRecon,
+    UnrolledResidualConditionedWaveletRecon,
 )
 from mri_recon.visualization import save_image_grid
 
@@ -37,7 +38,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--checkpoint-path",
         type=str,
-        default="outputs/checkpoints/unrolled_kan_frequency_aware_recon_c5_acc4_best.pt",
+        default="outputs/checkpoints/unrolled_residual_wavelet_recon_c5_acc4_best.pt",
     )
     parser.add_argument("--data-dir", type=str, default="data/knee_singlecoil_val")
     parser.add_argument("--batch-size", type=int, default=1)
@@ -73,6 +74,8 @@ def build_model_from_checkpoint_args(checkpoint_args: dict[str, object]) -> nn.M
         return UnrolledComplexUNetRecon(**model_kwargs)
     if model_type == "fa":
         return UnrolledFrequencyAwareRecon(**model_kwargs)
+    if model_type == "residual_wavelet":
+        return UnrolledResidualConditionedWaveletRecon(**model_kwargs)
 
     return UnrolledKANFrequencyAwareRecon(**model_kwargs)
 
@@ -83,6 +86,7 @@ def method_name_from_checkpoint_args(checkpoint_args: dict[str, object]) -> str:
         "complex": "unrolled_complex_unet",
         "fa": "unrolled_fa_complex_unet",
         "kan": "unrolled_kan_fa_complex_unet",
+        "residual_wavelet": "unrolled_residual_conditioned_wavelet",
     }.get(model_type, f"unrolled_{model_type}")
 
 

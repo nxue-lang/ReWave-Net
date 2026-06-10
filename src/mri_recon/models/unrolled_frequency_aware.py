@@ -9,7 +9,13 @@ from torch import nn
 from mri_recon.models.complex_unet import ComplexUNet
 from mri_recon.models.frequency_aware_unet import FrequencyAwareComplexUNet
 from mri_recon.models.kan_frequency_aware_unet import KANFrequencyAwareComplexUNet
-from mri_recon.reconstruction.torch_ops import apply_soft_data_consistency_torch
+from mri_recon.models.residual_conditioned_wavelet_unet import (
+    ResidualConditionedWaveletComplexUNet,
+)
+from mri_recon.reconstruction.torch_ops import (
+    apply_soft_data_consistency_torch,
+    normalized_band_residuals_torch,
+)
 
 
 def _initial_dc_logit(initial_dc_weight: float) -> float:
@@ -30,6 +36,7 @@ class _UnrolledComplexReconBase(nn.Module):
         num_cascades: int = 5,
         shared_denoiser: bool = True,
         initial_dc_weight: float = 0.1,
+        residual_conditioned: bool = False,
     ) -> None:
         super().__init__()
 
@@ -38,6 +45,7 @@ class _UnrolledComplexReconBase(nn.Module):
 
         self.num_cascades = num_cascades
         self.shared_denoiser = shared_denoiser
+        self.residual_conditioned = residual_conditioned
 
         num_denoisers = 1 if shared_denoiser else num_cascades
         self.denoisers = nn.ModuleList(
@@ -80,7 +88,19 @@ class _UnrolledComplexReconBase(nn.Module):
 
         for cascade_index in range(self.num_cascades):
             denoiser = self._denoiser_for_cascade(cascade_index)
-            current = denoiser(current)
+            if self.residual_conditioned:
+                band_residuals = normalized_band_residuals_torch(
+                    predicted_channels=current,
+                    measured_kspace_channels=measured_kspace,
+                    mask=mask,
+                )
+                cascade_progress = current.new_full(
+                    (current.shape[0], 1),
+                    cascade_index / max(self.num_cascades - 1, 1),
+                )
+                current = denoiser(current, band_residuals, cascade_progress)
+            else:
+                current = denoiser(current)
             current = apply_soft_data_consistency_torch(
                 predicted_channels=current,
                 measured_kspace_channels=measured_kspace,
@@ -152,4 +172,25 @@ class UnrolledKANFrequencyAwareRecon(_UnrolledComplexReconBase):
             num_cascades=num_cascades,
             shared_denoiser=shared_denoiser,
             initial_dc_weight=initial_dc_weight,
+        )
+
+
+class UnrolledResidualConditionedWaveletRecon(_UnrolledComplexReconBase):
+    """Unrolled reconstruction with measured-residual-conditioned wavelet routing."""
+
+    def __init__(
+        self,
+        num_cascades: int = 5,
+        base_channels: int = 16,
+        shared_denoiser: bool = True,
+        initial_dc_weight: float = 0.1,
+    ) -> None:
+        super().__init__(
+            denoiser_factory=lambda: ResidualConditionedWaveletComplexUNet(
+                base_channels=base_channels
+            ),
+            num_cascades=num_cascades,
+            shared_denoiser=shared_denoiser,
+            initial_dc_weight=initial_dc_weight,
+            residual_conditioned=True,
         )

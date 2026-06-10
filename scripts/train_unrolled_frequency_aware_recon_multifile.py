@@ -23,6 +23,7 @@ from mri_recon.models.unrolled_frequency_aware import (
     UnrolledComplexUNetRecon,
     UnrolledFrequencyAwareRecon,
     UnrolledKANFrequencyAwareRecon,
+    UnrolledResidualConditionedWaveletRecon,
 )
 
 
@@ -35,8 +36,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--model-type",
         type=str,
-        choices=["complex", "fa", "kan"],
-        default="kan",
+        choices=["complex", "fa", "kan", "residual_wavelet"],
+        default="residual_wavelet",
     )
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch-size", type=int, default=1)
@@ -60,8 +61,27 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--disable-progress", action="store_true")
     parser.add_argument("--no-amp", action="store_true")
     parser.add_argument("--output-dir", type=str, default="outputs")
+    parser.add_argument(
+        "--resume-checkpoint",
+        type=str,
+        default=None,
+        help="Resume training state from a checkpoint.",
+    )
+    parser.add_argument(
+        "--fast-profile",
+        action="store_true",
+        help=(
+            "Use a faster practical profile: batch size 2, four data workers, "
+            "validation every five epochs, and fewer middle slices."
+        ),
+    )
 
     args = parser.parse_args()
+    if args.fast_profile:
+        args.batch_size = max(args.batch_size, 2)
+        args.num_workers = max(args.num_workers, 4)
+        args.val_every = max(args.val_every, 5)
+        args.middle_slice_margin = min(args.middle_slice_margin, 3)
     if args.val_every < 1:
         raise ValueError(f"--val-every must be >= 1, got {args.val_every}")
     if args.mask_seed is None:
@@ -72,6 +92,10 @@ def parse_args() -> argparse.Namespace:
 
 def get_device() -> torch.device:
     if torch.cuda.is_available():
+        torch.set_float32_matmul_precision("high")
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+        torch.backends.cudnn.benchmark = True
         return torch.device("cuda")
     return torch.device("cpu")
 
@@ -117,6 +141,8 @@ def build_model(args: argparse.Namespace) -> nn.Module:
         return UnrolledComplexUNetRecon(**model_kwargs)
     if args.model_type == "fa":
         return UnrolledFrequencyAwareRecon(**model_kwargs)
+    if args.model_type == "residual_wavelet":
+        return UnrolledResidualConditionedWaveletRecon(**model_kwargs)
 
     return UnrolledKANFrequencyAwareRecon(**model_kwargs)
 
@@ -171,10 +197,12 @@ def evaluate_loss(
             iterator = tqdm(dataloader, desc="Validation", leave=False)
 
         for batch in iterator:
-            inputs = batch["input"].to(device)
-            targets = batch["target_complex"].to(device)
-            measured_kspaces = batch["measured_kspace"].to(device)
-            masks = batch["mask"].to(device)
+            inputs = batch["input"].to(device, non_blocking=True)
+            targets = batch["target_complex"].to(device, non_blocking=True)
+            measured_kspaces = batch["measured_kspace"].to(
+                device, non_blocking=True
+            )
+            masks = batch["mask"].to(device, non_blocking=True)
 
             predictions = model(
                 image=inputs,
@@ -273,12 +301,16 @@ def main() -> None:
         batch_size=args.batch_size,
         shuffle=True,
         num_workers=args.num_workers,
+        pin_memory=device.type == "cuda",
+        persistent_workers=args.num_workers > 0,
     )
     test_loader = DataLoader(
         test_dataset,
         batch_size=args.batch_size,
         shuffle=False,
         num_workers=args.num_workers,
+        pin_memory=device.type == "cuda",
+        persistent_workers=args.num_workers > 0,
     )
 
     model = build_model(args).to(device)
@@ -300,8 +332,37 @@ def main() -> None:
     )
     best_val_loss = float("inf")
     history = []
+    start_epoch = 1
 
-    for epoch in range(1, args.epochs + 1):
+    if args.resume_checkpoint is not None:
+        resume_path = Path(args.resume_checkpoint)
+        if not resume_path.exists():
+            raise FileNotFoundError(f"Resume checkpoint not found: {resume_path}")
+
+        resume_checkpoint = torch.load(resume_path, map_location=device)
+        model.load_state_dict(resume_checkpoint["model_state_dict"])
+        if "optimizer_state_dict" in resume_checkpoint:
+            optimizer.load_state_dict(resume_checkpoint["optimizer_state_dict"])
+        if "scaler_state_dict" in resume_checkpoint:
+            scaler.load_state_dict(resume_checkpoint["scaler_state_dict"])
+
+        completed_epoch = int(resume_checkpoint.get("epoch", 0))
+        start_epoch = completed_epoch + 1
+        resumed_best_val_loss = float(
+            resume_checkpoint.get(
+                "best_val_loss",
+                resume_checkpoint.get("val_loss", float("inf")),
+            )
+        )
+        best_val_loss = (
+            resumed_best_val_loss
+            if np.isfinite(resumed_best_val_loss)
+            else float("inf")
+        )
+        print(f"Resuming from: {resume_path}")
+        print(f"Starting at epoch: {start_epoch}")
+
+    for epoch in range(start_epoch, args.epochs + 1):
         model.train()
         train_losses = []
 
@@ -314,10 +375,12 @@ def main() -> None:
             )
 
         for batch in iterator:
-            inputs = batch["input"].to(device)
-            targets = batch["target_complex"].to(device)
-            measured_kspaces = batch["measured_kspace"].to(device)
-            masks = batch["mask"].to(device)
+            inputs = batch["input"].to(device, non_blocking=True)
+            targets = batch["target_complex"].to(device, non_blocking=True)
+            measured_kspaces = batch["measured_kspace"].to(
+                device, non_blocking=True
+            )
+            masks = batch["mask"].to(device, non_blocking=True)
 
             with torch.amp.autocast("cuda", enabled=use_amp):
                 predictions = model(
@@ -327,7 +390,7 @@ def main() -> None:
                 )
                 loss = loss_fn(predictions, targets)
 
-            optimizer.zero_grad()
+            optimizer.zero_grad(set_to_none=True)
             scaler.scale(loss).backward()
             scaler.unscale_(optimizer)
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
@@ -372,8 +435,11 @@ def main() -> None:
         torch.save(
             {
                 "model_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "scaler_state_dict": scaler.state_dict(),
                 "epoch": epoch,
                 "val_loss": val_loss,
+                "best_val_loss": best_val_loss,
                 "args": vars(args),
                 "train_files": [path.as_posix() for path in train_paths],
                 "test_files": [path.as_posix() for path in test_paths],

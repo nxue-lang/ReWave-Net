@@ -13,6 +13,7 @@ CHECKPOINTS_DIR = Path("outputs/checkpoints")
 
 METHOD_FILES = {
     "zero_filled": [
+        "unrolled_residual_conditioned_wavelet_metrics.csv",
         "unrolled_kan_fa_complex_unet_metrics.csv",
         "unrolled_frequency_aware_recon_metrics.csv",
         "unrolled_fa_complex_unet_metrics.csv",
@@ -23,6 +24,9 @@ METHOD_FILES = {
     "unrolled_kan_fa_complex_unet": [
         "unrolled_kan_fa_complex_unet_metrics.csv",
         "unrolled_frequency_aware_recon_metrics.csv",
+    ],
+    "unrolled_residual_conditioned_wavelet": [
+        "unrolled_residual_conditioned_wavelet_metrics.csv",
     ],
 }
 
@@ -45,6 +49,10 @@ CHECKPOINT_FILES = {
         "unrolled_kan_recon_c3_acc4_best.pt",
         "unrolled_kan_frequency_aware_recon_c5_acc4_best.pt",
         "unrolled_kan_frequency_aware_recon_c3_acc4_best.pt",
+    ],
+    "unrolled_residual_conditioned_wavelet": [
+        "unrolled_residual_wavelet_recon_c5_acc4_best.pt",
+        "unrolled_residual_wavelet_recon_c3_acc4_best.pt",
     ],
 }
 

@@ -12,7 +12,8 @@
 6. `train_frequency_aware_unet.py` 和 `evaluate_frequency_aware_unet_with_dc.py`: frequency-aware complex U-Net。
 7. `train_kan_frequency_aware_unet.py` 和 `evaluate_kan_frequency_aware_unet_soft_dc_sweep.py`: KAN-style gated frequency-aware U-Net。
 8. `test_multifile_dataset.py` 和 `train_kan_frequency_aware_unet_multifile.py`: 多文件泛化实验入口。
-9. `train_unrolled_frequency_aware_recon_multifile.py` 和 `evaluate_unrolled_frequency_aware_recon.py`: 下一阶段主线，学习 regularizer 和 k-space DC 交替的 unrolled reconstruction。
+9. `test_residual_conditioned_wavelet_model.py`: 检查 Haar 可逆性、频段残差和新模型前后向传播。
+10. `train_unrolled_frequency_aware_recon_multifile.py` 和 `evaluate_unrolled_frequency_aware_recon.py`: 当前主线，支持 residual-conditioned wavelet unrolled reconstruction。
 
 ## Baseline 和检查脚本
 
@@ -23,6 +24,7 @@
 | `evaluate_zero_filled_baseline.py` | 对 zero-filled 结果计算 PSNR、SSIM、MAE。 |
 | `run_data_consistency_check.py` | 检查 hard data consistency 是否能保持 sampled k-space。 |
 | `test_multifile_dataset.py` | 快速检查多文件 dataset 的 sample shape。 |
+| `test_residual_conditioned_wavelet_model.py` | 无需数据集的新模型 CUDA/CPU smoke test。 |
 
 ## 训练脚本
 
@@ -34,8 +36,8 @@
 | `train_frequency_aware_unet.py` | `FrequencyAwareComplexUNet` | 当前主要方法之一。 |
 | `train_frequency_aware_unet_with_dc.py` | `FrequencyAwareComplexUNet` | 训练时加入 hard DC-aware loss。 |
 | `train_kan_frequency_aware_unet.py` | `KANFrequencyAwareComplexUNet` | 单文件 KAN-style gate 尝试。 |
-| `train_kan_frequency_aware_unet_multifile.py` | `KANFrequencyAwareComplexUNet` | 多文件训练入口，后续更建议沿着这个方向做。 |
-| `train_unrolled_frequency_aware_recon_multifile.py` | `UnrolledFrequencyAwareRecon` / `UnrolledKANFrequencyAwareRecon` | 多 cascade learned regularizer + soft DC，和 MoDL/VarNet 思路更接近。 |
+| `train_kan_frequency_aware_unet_multifile.py` | `KANFrequencyAwareComplexUNet` | 多文件历史对照训练入口。 |
+| `train_unrolled_frequency_aware_recon_multifile.py` | `UnrolledResidualConditionedWaveletRecon` 及历史 baselines | 多 cascade learned regularizer + soft DC；当前推荐 `--model-type residual_wavelet`。 |
 
 ## 评估脚本
 
@@ -77,13 +79,14 @@ python scripts\evaluate_zero_filled_baseline.py
 python scripts\train_complex_unet.py
 python scripts\evaluate_complex_unet_with_dc.py
 python scripts\train_kan_frequency_aware_unet_multifile.py
-python scripts\train_unrolled_frequency_aware_recon_multifile.py --epochs 1 --max-train-files 2 --max-test-files 1 --num-cascades 2 --base-channels 4
+python scripts\test_residual_conditioned_wavelet_model.py
+python scripts\train_unrolled_frequency_aware_recon_multifile.py --model-type residual_wavelet --epochs 1 --max-train-files 2 --max-test-files 1 --num-cascades 2 --base-channels 4
 ```
 
 CPU 上建议先跑：
 
 ```powershell
-python scripts\train_unrolled_frequency_aware_recon_multifile.py --model-type kan --epochs 3 --num-cascades 2 --base-channels 4 --max-train-files 12 --max-test-files 4 --middle-slice-margin 2 --max-train-samples 60 --max-test-samples 20
+python scripts\train_unrolled_frequency_aware_recon_multifile.py --model-type residual_wavelet --epochs 3 --num-cascades 2 --base-channels 4 --max-train-files 12 --max-test-files 4 --middle-slice-margin 2 --max-train-samples 60 --max-test-samples 20
 ```
 
 ## 保留的历史尝试
