@@ -83,6 +83,15 @@ on the same held-out split. This extended-training result is better than the
 20-epoch ReWave-Net result, but it is not a matched-epoch comparison against
 the 20-epoch Complex U-Net baseline.
 
+### Reconstruction and Detail Comparison
+
+The figure below is generated from a real held-out fastMRI slice using the
+`v0.1.1` checkpoint. The red boxes mark an automatically selected
+high-gradient detail region; the second row enlarges the same region for each
+image.
+
+![ReWave-Net reconstruction and detail comparison](results/rewave_net_detail_comparison.png)
+
 ## Pretrained Model
 
 The best five-cascade ReWave-Net checkpoint is published with the

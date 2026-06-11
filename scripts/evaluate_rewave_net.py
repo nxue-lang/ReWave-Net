@@ -22,7 +22,10 @@ from mri_recon.evaluation.complex_metrics import (
     target_scaled_magnitude_pair,
 )
 from mri_recon.models.rewave_net import ReWaveNet, UnrolledComplexUNetRecon
-from mri_recon.visualization import save_image_grid
+from mri_recon.visualization import (
+    save_image_grid,
+    save_reconstruction_detail_comparison,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -150,6 +153,10 @@ def main() -> None:
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
     method_name = method_name_from_checkpoint_args(checkpoint_args)
+    method_display_name = {
+        "rewave_net": "ReWave-Net",
+        "unrolled_complex_unet": "Unrolled Complex U-Net",
+    }.get(method_name, method_name.replace("_", " ").title())
 
     test_files = checkpoint.get("test_files")
     if not test_files:
@@ -269,11 +276,19 @@ def main() -> None:
                         titles=[
                             "Target",
                             "Zero-filled",
-                            method_name,
+                            method_display_name,
                             "Absolute Error",
                         ],
                         output_path=figures_dir
                         / f"{method_name}_example.png",
+                    )
+                    save_reconstruction_detail_comparison(
+                        target=target_mag,
+                        zero_filled=zero_mag,
+                        reconstruction=pred_mag,
+                        method_name=method_display_name,
+                        output_path=figures_dir
+                        / f"{method_name}_detail_comparison.png",
                     )
                     example_saved = True
 

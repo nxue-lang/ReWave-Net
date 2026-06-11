@@ -55,8 +55,12 @@ comparison.
 - `experiment_config.json`: compact experiment and checkpoint metadata.
 - `rewave_net_example.png`: representative target, zero-filled reconstruction,
   ReWave-Net reconstruction, and error map.
+- `rewave_net_detail_comparison.png`: full-image and automatically selected
+  local-detail comparison from the same real held-out reconstruction.
 
 ![ReWave-Net reconstruction example](rewave_net_example.png)
+
+![ReWave-Net reconstruction and detail comparison](rewave_net_detail_comparison.png)
 
 ## Pretrained Checkpoint
 
