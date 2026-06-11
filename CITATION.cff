@@ -5,10 +5,10 @@ type: software
 authors:
   - family-names: "Xue"
     given-names: "Nancy"
-version: 0.1.0
-date-released: 2026-06-10
+version: 0.1.1
+date-released: 2026-06-11
 repository-code: "https://github.com/nxue-lang/ReWave-Net"
-url: "https://github.com/nxue-lang/ReWave-Net/releases/tag/v0.1.0"
+url: "https://github.com/nxue-lang/ReWave-Net/releases/tag/v0.1.1"
 keywords:
   - MRI reconstruction
   - accelerated MRI

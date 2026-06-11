@@ -17,7 +17,7 @@ matched ReWave-Net experiment reported in the repository README.
 | Base channels | 8 |
 | Shared regularizer | Yes |
 | Initial soft-DC weight | 0.1 |
-| Epochs | 20 |
+| Matched comparison epochs | 20 |
 | Seed / mask seed | 42 / 42 |
 
 Split hashes are 12-byte BLAKE2s digests of sorted fastMRI volume filenames
@@ -37,6 +37,19 @@ and the Complex U-Net baseline use matched training configurations. Metrics
 are computed per slice after a `320 x 320` center crop and target-maximum
 scaling, then averaged across slices.
 
+## Extended Training Result
+
+The `v0.1.1` ReWave-Net checkpoint continues training to 40 total epochs and
+selects epoch 39:
+
+| Method | PSNR mean/std | SSIM mean/std | MAE mean/std |
+| --- | --- | --- | --- |
+| ReWave-Net `v0.1.1` | **27.1215 / 3.2338** | **0.5943 / 0.1121** | **0.037148 / 0.013750** |
+
+The 20-epoch Complex U-Net baseline was not retrained to 40 epochs, so this
+extended-training result is not presented as a matched-epoch baseline
+comparison.
+
 ## Files
 
 - `experiment_config.json`: compact experiment and checkpoint metadata.
@@ -48,7 +61,7 @@ scaling, then averaged across slices.
 ## Pretrained Checkpoint
 
 The best checkpoint is attached to the
-[GitHub `v0.1.0` release](https://github.com/nxue-lang/ReWave-Net/releases/tag/v0.1.0)
+[GitHub `v0.1.1` release](https://github.com/nxue-lang/ReWave-Net/releases/tag/v0.1.1)
 as:
 
 ```text
@@ -58,14 +71,15 @@ rewave_c5_acc4_best.pt
 SHA256:
 
 ```text
-5d0b7b523e0d220f66e5f965a2e742c48297b058c0826d055c44376c0ebb7f05
+fcc5e92cdef9325f306b8c95fb1318ab1b55dca7aef5c3d6469fabc0611fe043
 ```
 
-The checkpoint was selected at epoch 20 with validation complex L1 loss
-`0.0296702308`. Its learned soft-DC weights are approximately:
+Training continued from the original 20-epoch checkpoint to 40 total epochs.
+The checkpoint was selected at epoch 39 with validation complex L1 loss
+`0.0296036175`. Its learned soft-DC weights are approximately:
 
 ```text
-[0.7720, 0.9104, 0.9096, 0.9380, 0.9584]
+[0.9545, 0.9954, 0.9969, 0.9970, 0.9878]
 ```
 
 The same 40 held-out volumes were used for checkpoint selection and the

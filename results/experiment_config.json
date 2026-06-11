@@ -12,7 +12,7 @@
   "base_channels": 8,
   "shared_denoiser": true,
   "initial_dc_weight": 0.1,
-  "epochs": 20,
+  "epochs": 40,
   "batch_size": 1,
   "learning_rate": 0.0002,
   "train_ratio": 0.8,
@@ -22,15 +22,25 @@
   "metric_crop": [320, 320],
   "metric_scale": "per-slice target magnitude maximum",
   "metric_aggregation": "mean and standard deviation across slices",
-  "best_epoch": 20,
-  "best_validation_complex_l1": 0.02967023079558699,
+  "training_continuation": "continued from the original 20-epoch checkpoint",
+  "baseline_comparison_note": "the Complex U-Net baseline was trained for 20 epochs and was not retrained to 40 epochs",
+  "best_epoch": 39,
+  "best_validation_complex_l1": 0.029603617522992533,
+  "evaluation_metrics": {
+    "psnr_mean": 27.12152112482232,
+    "psnr_std": 3.233776467680329,
+    "ssim_mean": 0.5943418644412485,
+    "ssim_std": 0.11210568631665864,
+    "mae_mean": 0.037148374820720746,
+    "mae_std": 0.013749722470042672
+  },
   "learned_dc_weights": [
-    0.7720393538475037,
-    0.910376250743866,
-    0.9096140265464783,
-    0.938000500202179,
-    0.9584242105484009
+    0.9545264840126038,
+    0.9954075217247009,
+    0.9968971014022827,
+    0.997043788433075,
+    0.9877774119377136
   ],
   "checkpoint_asset": "rewave_c5_acc4_best.pt",
-  "checkpoint_sha256": "5d0b7b523e0d220f66e5f965a2e742c48297b058c0826d055c44376c0ebb7f05"
+  "checkpoint_sha256": "fcc5e92cdef9325f306b8c95fb1318ab1b55dca7aef5c3d6469fabc0611fe043"
 }

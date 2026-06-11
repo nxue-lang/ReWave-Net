@@ -25,6 +25,27 @@ data-consistency weights from a common initialization of `0.1`:
 [0.772, 0.910, 0.910, 0.938, 0.958]
 ```
 
+## Extended Training Checkpoint
+
+The `v0.1.1` release continues ReWave-Net training from 20 to 40 total epochs.
+Its best checkpoint occurs at epoch 39:
+
+| Method | Training epochs | PSNR mean | SSIM mean | MAE mean |
+| --- | ---: | ---: | ---: | ---: |
+| ReWave-Net `v0.1.0` | 20 | 27.0594 | 0.5918 | 0.037323 |
+| ReWave-Net `v0.1.1` | 40 total, best at 39 | **27.1215** | **0.5943** | **0.037148** |
+
+The extended checkpoint has validation complex L1 loss `0.0296036175` and
+learned soft-DC weights approximately:
+
+```text
+[0.955, 0.995, 0.997, 0.997, 0.988]
+```
+
+The Complex U-Net baseline has not been retrained to 40 epochs. Therefore, the
+`v0.1.1` result is reported as an improved ReWave-Net checkpoint, not as a
+matched-epoch comparison against that baseline.
+
 ## Evaluation Protocol
 
 The training script evaluates complex L1 loss on the 40 held-out volumes after

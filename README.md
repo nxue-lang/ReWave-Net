@@ -1,7 +1,7 @@
 # ReWave-Net
 
 [![CI](https://github.com/nxue-lang/ReWave-Net/actions/workflows/ci.yml/badge.svg)](https://github.com/nxue-lang/ReWave-Net/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/nxue-lang/ReWave-Net)](https://github.com/nxue-lang/ReWave-Net/releases/tag/v0.1.0)
+[![Release](https://img.shields.io/github/v/release/nxue-lang/ReWave-Net)](https://github.com/nxue-lang/ReWave-Net/releases/tag/v0.1.1)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.9-blue)](https://www.python.org/)
 
 ReWave-Net is a measurement-residual-conditioned wavelet unrolled network for
@@ -58,7 +58,7 @@ standard components as new.
 
 ## Results
 
-The current matched experiment uses the same held-out volumes, sampling rule,
+The original matched 20-epoch experiment uses the same held-out volumes, sampling rule,
 number of cascades, base channels, epochs, and metric conversion for the
 zero-filled, unrolled Complex U-Net, and ReWave-Net comparisons.
 
@@ -66,9 +66,10 @@ zero-filled, unrolled Complex U-Net, and ReWave-Net comparisons.
 | --- | ---: | ---: | ---: |
 | Zero-filled | 25.4182 | 0.5456 | 0.042191 |
 | Unrolled Complex U-Net | 26.4522 | 0.5742 | 0.039058 |
-| ReWave-Net | **27.0594** | **0.5918** | **0.037323** |
+| ReWave-Net, 20 epochs | **27.0594** | **0.5918** | **0.037323** |
 
-ReWave-Net improves PSNR by `0.6072 dB` over the matched unrolled Complex
+In this matched comparison, ReWave-Net improves PSNR by `0.6072 dB` over the
+20-epoch unrolled Complex
 U-Net baseline. The reported values are per-slice means on the held-out split
 that was also used for checkpoint selection, so they are validation/evaluation
 results rather than an independent test-set estimate or a clinical validation
@@ -76,14 +77,20 @@ claim. See [the results notes](docs/results.md) for the exact metric protocol
 and remaining ablations. A curated result summary, configuration, and
 reconstruction example are available in [`results/`](results/README.md).
 
+The `v0.1.1` checkpoint continues ReWave-Net training to 40 total epochs and
+selects epoch 39. It reaches PSNR `27.1215`, SSIM `0.5943`, and MAE `0.037148`
+on the same held-out split. This extended-training result is better than the
+20-epoch ReWave-Net result, but it is not a matched-epoch comparison against
+the 20-epoch Complex U-Net baseline.
+
 ## Pretrained Model
 
 The best five-cascade ReWave-Net checkpoint is published with the
-[`v0.1.0` GitHub release](https://github.com/nxue-lang/ReWave-Net/releases/tag/v0.1.0):
+[`v0.1.1` GitHub release](https://github.com/nxue-lang/ReWave-Net/releases/tag/v0.1.1):
 
 ```text
 rewave_c5_acc4_best.pt
-SHA256: 5d0b7b523e0d220f66e5f965a2e742c48297b058c0826d055c44376c0ebb7f05
+SHA256: fcc5e92cdef9325f306b8c95fb1318ab1b55dca7aef5c3d6469fabc0611fe043
 ```
 
 Evaluate it with:
@@ -186,7 +193,7 @@ The complete public script inventory is documented in
   conversion fixed across models.
 - Checkpoints, generated metrics, and fastMRI files are not committed.
 - The current five learned ReWave-Net soft-DC weights are approximately
-  `[0.772, 0.910, 0.910, 0.938, 0.958]`.
+  `[0.955, 0.995, 0.997, 0.997, 0.988]`.
 
 ## Scope
 
@@ -200,7 +207,7 @@ paper citation is available, cite the software release:
 
 ```text
 Nancy Xue. ReWave-Net: Measurement-residual-conditioned wavelet unrolled MRI
-reconstruction. Version 0.1.0, 2026.
+reconstruction. Version 0.1.1, 2026.
 https://github.com/nxue-lang/ReWave-Net
 ```
 
