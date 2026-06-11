@@ -66,7 +66,7 @@ zero-filled, unrolled Complex U-Net, and ReWave-Net comparisons.
 | --- | ---: | ---: | ---: |
 | Zero-filled | 25.4182 | 0.5456 | 0.042191 |
 | Unrolled Complex U-Net | 26.4522 | 0.5742 | 0.039058 |
-| ReWave-Net, 20 epochs | **27.0594** | **0.5918** | **0.037323** |
+| ReWave-Net | **27.0594** | **0.5918** | **0.037323** |
 
 In this matched comparison, ReWave-Net improves PSNR by `0.6072 dB` over the
 20-epoch unrolled Complex
